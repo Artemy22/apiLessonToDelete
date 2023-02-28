@@ -35,28 +35,28 @@ describe('Pet suite', () => {
   })
 
   it('Update a pet image', () => {
-    cy.request({
-      method: 'POST',
-      url: `/pet/${petId}/uploadImage`,
-      form: true,
-      failOnStatusCode: false,
-      headers: {
-        'accept': 'application/json',
-        'Content-Type': 'multipart/form-data'
-      },
-      body: {
-        additionalMetadata: 'additionalMetadata',
-        file: '@pet.png;type=image/png'
-      },
-    })
+    
+    cy.fixture('pet.png', 'binary').then( image => {
+      const blob = Cypress.Blob.binaryStringToBlob(image);
+      const formData = new FormData();
+      formData.append('file', blob, 'pet.png');
+      formData.append('additionalMetadata', 'additionalMetadata');
+      formData.append('type', 'image/png');
+    
+        cy.request({
+          method: 'POST', 
+          url: `/pet/${petId}/uploadImage`,
+          body: formData,
+          headers: {
+            'content-type': 'multipart/form-data',
+            'accept': 'application/json'
+          }
+        }).then(response => {
+          console.log(response.body)
+          expect(response.isOkStatusCode)
+        })
+      })
 
-    cy.exec(
-      `curl -X 'POST' \
-    'https://petstore.swagger.io/v2/pet/${petId}/uploadImage' \
-    -H 'accept: application/json' \
-    -H 'Content-Type: multipart/form-data' \
-    -F 'additionalMetadata=additionalMetadata' \
-    -F 'file=@cypress.config.js;type=text/javascript'`)
   })
 
   it('pet update', () => {
